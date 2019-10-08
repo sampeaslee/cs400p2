@@ -24,8 +24,6 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 	    BSTNode<K,V> right;
 	    BSTNode<K,V> parent;
 	    Color color;
-	    
-	    
 
 	    /**
 	     * @param key
@@ -50,16 +48,19 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		 * @param node- rotated around
 		 * @return reference to updated node 
 		 */
-		public BSTNode<K,V> leftRotate() throws KeyNotFoundException{
+	  //LOOOOK AT THIS SHIT
+		private BSTNode<K,V> leftRotate() throws KeyNotFoundException{
 			BSTNode<K,V> temp = this.right;
 			this.right = temp.left;
 			temp.left = this;
 			
 			temp.parent = this.parent;
 			this.parent = temp;
-			if(this.left != null) {
-			this.left.parent = this;
+			if(this.right != null) {
+			this.right.parent = this;
 			}
+			
+			
 		
 			return temp;
 		}	
@@ -68,7 +69,7 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		 * @param node- rotated around
 		 * @return reference to updated node 
 		 */	
-		public  BSTNode<K,V> rightRotate() throws KeyNotFoundException{
+		private  BSTNode<K,V> rightRotate() throws KeyNotFoundException{
 			BSTNode<K,V> temp = this.left;
 			this.left = temp.right;
 			temp.right = this;
@@ -339,6 +340,7 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 	@Override
 	public void insert(K key, V value) throws IllegalNullKeyException, DuplicateKeyException {
 		if (key == null) {
+			//If key is null throw Exception
 			throw new IllegalNullKeyException();
 		}		
 		root = insert(root,key,value,null);	
@@ -423,11 +425,14 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 					 grandMa = grandMa.leftRotate();
 					 if(grandMa.parent != null) {
 					 grandMa.parent.right = grandMa;
-					 }else {
-						 node.color = Color.BLACK;
 					 }
 				 }
-			}else {		
+				 grandMa.left.color = Color.RED;
+				 node.parent.color = Color.BLACK;
+
+					
+
+			}else {	
 				if(grandMa.parent != null && grandMa.parent.left == grandMa) {
 					System.out.println("D");
 					grandMa = grandMa.rightRotate();
@@ -438,14 +443,14 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 					 if(grandMa.parent != null) {
 					 grandMa.parent.right = grandMa;
 					 }else {
-						 node.color = Color.BLACK;
+						 //node.color = Color.BLACK;
 					 }
-				 }
+							 
+				}
 				node.parent.color = Color.BLACK;
-				grandMa.color = Color.RED;
-			}
+				grandMa.right.color = Color.RED;
 		
-	
+			}
 			
 			
 		}	
@@ -652,100 +657,39 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		
 		print(node.left, spaces, numKeys);
 	}
-	
-	private void REPAIR() {
-		
-	}
-	
+
 	public static void main(String[]args) {
 		
-		//BALST<Integer,Integer> bst = new BALST<>();
+		BALST<Integer,Integer> bst = new BALST<>();
 		try {
-		/*bst.insert(20, 1);
-		bst.insert(28, 1);
-		bst.insert(16, 1);
-		bst.insert(19, 4);
-		bst.insert(14,1);
-		bst.insert(24, 1);
-		bst.insert(30,1);
-		bst.insert(13,15);
-		bst.insert(15, 1);
-		bst.printTree();
-		
-		//bst.printTree();
-		
-		System.out.println("Get Value: " + bst.get(8));
-		System.out.println("Contains 14: " + bst.contains(14));
-		System.out.println("Contains: 2000: " + bst.contains(2000));
-		System.out.println("Parent of 14 is 15. "  + bst.getParent(14));
-		System.out.println("Left Child of 7 is 6 " + bst.getKeyOfLeftChildOf(7));
-		System.out.println("Right Child of 15 is null. " + bst.getKeyOfRightChildOf(15));
-		System.out.println("The sibling of 7 is 15. " + bst.getSibling(7).key);
-		System.out.println("The sibling of 14 is null. " + bst.getSibling(14));
-		System.out.println("The sibling of 8 is 6. " + bst.getSibling(8).key);
-		System.out.println("The sibling of 6 is 8. " + bst.getSibling(6).key);
-		System.out.println("The parent of the root is null: " + bst.getParent(10));
-		System.out.println("The sibling of the root is null: " + bst.getSibling(10));
-		
+		bst.insert(8, 1);
+		bst.insert(9, 1);
+		bst.insert(7, 1);
+		bst.insert(6,1);
+		bst.insert(5,1);
+		bst.insert(4,1);
+		bst.insert(3,1);
+		bst.insert(2,1);
+		//System.out.println("root " + bst.lookup(1).parent.key);
 		/*
-		BALST<Integer,Integer> rightRotate  = new BALST<>();
-		rightRotate.insert(10, 1);
-		rightRotate.insert(7, 1);
-		rightRotate.insert(6, 1);
-		rightRotate.insert(8,1);
-		rightRotate.insert(15, 1);	
+		System.out.println("1" + bst.lookup(1).color);
+		System.out.println("2" + bst.lookup(2).color);
+		System.out.println("3 " + bst.lookup(3).color);
+		System.out.println("4" + bst.lookup(4).color);
+		System.out.println("5" + bst.lookup(5).color);
+		*/
+		System.out.println("6" + bst.lookup(6).color);
+		System.out.println("4" + bst.lookup(4).color);
+		System.out.println("5" + bst.lookup(5).color);
+		
+		//bst.insert(7,1);
+		//bst.insert(8,15);
+		//bst.insert(, 1);
+		bst.print();
 
-		System.out.println("\nTest rotate methods!!!");
-		System.out.println("Before rotate:");
-		rightRotate.printTree();
-		System.out.println("Roots key: " + rightRotate.root.key);
-		System.out.println("Left child key: " + rightRotate.root.left.key);
-		System.out.println("Right child key: " + rightRotate.root.right.key + "\nAfter Right Rotate:");
-		rightRotate.root = rightRotate.root.rightRotate();
-		rightRotate.printTree();
-		System.out.println("Roots key: " + rightRotate.root.key);
-		System.out.println("Left child key: " + rightRotate.root.left.key);
-		System.out.println("Right child key: " + rightRotate.root.right.key);
-		System.out.println("Right childs right child key:" + rightRotate.root.right.right.key);
-		System.out.println("Right childs left child key: " + rightRotate.root.right.left.key +"\n");
 		
-		BALST<Integer,Integer> leftRotate  = new BALST<>();	
-		leftRotate.insert(20,1);
-		leftRotate.insert(25,1);
-		leftRotate.insert(24,1);
-		leftRotate.insert(27,1);
-		leftRotate.insert(16,1);
-		System.out.println("Number of keys: " + leftRotate.numKeys());
-		System.out.println("Before rotate:");
-		leftRotate.printTree();
-		System.out.println("Roots key: " + leftRotate.root.key);
-		System.out.println("Left child key: " + leftRotate.root.left.key);
-		System.out.println("Right child key: " + leftRotate.root.right.key + "\nAfter Left Rotate:");
-		leftRotate.root = leftRotate.root.leftRotate();
-		leftRotate.printTree();
-		System.out.println("Roots key: " + leftRotate.root.key);
-		System.out.println("Left child key: " + leftRotate.root.left.key);
-		System.out.println("Right child key: " + leftRotate.root.right.key);
-		System.out.println("Left childs left key " + leftRotate.root.left.left.key);
-		System.out.println("Left childs right key: " +  leftRotate.root.left.right.key);
-		*/
-		/*
-		System.out.println("\n");
-		BALST<Integer,Integer> leftRight = new BALST<>();
-		leftRight.insert(10, 1);
-		leftRight.insert(7, 1);
-		leftRight.insert(6, 1);
-		leftRight.insert(8,1);
-		leftRight.insert(15, 1);
-		System.out.println("Before Rotate");
-		leftRight.printTree();
-		System.out.println("After Left Rotate at Parent");
-		leftRight.root.left = leftRight.root.left.leftRotate();
-		leftRight.printTree();
-		System.out.println("After Right Rotate at GrandParent");
-		leftRight.root = leftRight.root.rightRotate();
-		leftRight.printTree();
-		*/
+		
+
 		BALST<Integer,Integer> rightLeft = new BALST<>();
 		rightLeft.insert(20,1);
 		rightLeft.insert(25,1);
@@ -767,7 +711,7 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		test.insert(45,11);
 		test.insert(12, 1);
 		test.print();
-		System.out.println("root " + test.lookup(56).color);
+		//System.out.println("root " + test.lookup(56).parent.color);
 		System.out.println("right " + test.lookup(77).color);
 		System.out.println("left " + test.lookup(45).color);
 		System.out.println("left left " + test.lookup(12).color);
@@ -778,7 +722,7 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		System.out.println("Node is parent right and parent is grandmas right");
 		test2.insert(56, 1);
 		//test.insert(77, 1);
-		//test.insert(45,11);
+		test2.insert(45,11);
 		test2.insert(60, 1);
 		test2.insert(70,1);
 		test2.print();
