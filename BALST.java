@@ -1,6 +1,7 @@
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-
+import java.util.Queue;
 /**
  * 
  * Class to implement a BalanceSearchTree. Can be of type AVL or Red-Black.
@@ -11,15 +12,19 @@ import java.util.List;
  */
 public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 	
-	//Pirvate inner class storing node of the tree 
+	enum Color {
+		RED, BLACK;
+	}
+	//Public inner class storing node of the tree 
 	private class BSTNode<K,V> {
 	    
 		K key;
 	    V value;
 	    BSTNode<K,V> left;
 	    BSTNode<K,V> right;
-	    int balanceFactor;
-	    int height;
+	    BSTNode<K,V> parent;
+	    Color color;
+	    
 	    
 
 	    /**
@@ -28,17 +33,56 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 	     * @param leftChild
 	     * @param rightChild
 	     */
-	    BSTNode(K key, V value, BSTNode<K,V>  leftChild, BSTNode<K,V> rightChild) {
+	  BSTNode(K key, V value, Color color,BSTNode<K,V>  leftChild, BSTNode<K,V> rightChild, BSTNode<K,V> parent) {
 	        this.key = key;
 	        this.value = value;
+	        this.color = color;
 	        this.left = leftChild;
 	        this.right = rightChild;
-	        this.height = 0;
-	        this.balanceFactor = 0;
+	        this.parent = parent;
+	
 	    }
+	  
+	  
+
+		/**
+		 * Left rotate around a BSTNode
+		 * @param node- rotated around
+		 * @return reference to updated node 
+		 */
+		public BSTNode<K,V> leftRotate() throws KeyNotFoundException{
+			BSTNode<K,V> temp = this.right;
+			this.right = temp.left;
+			temp.left = this;
+			
+			temp.parent = this.parent;
+			this.parent = temp;
+			if(this.left != null) {
+			this.left.parent = this;
+			}
+		
+			return temp;
+		}	
+		/**
+		 * Right rotate around a BSTNode
+		 * @param node- rotated around
+		 * @return reference to updated node 
+		 */	
+		public  BSTNode<K,V> rightRotate() throws KeyNotFoundException{
+			BSTNode<K,V> temp = this.left;
+			this.left = temp.right;
+			temp.right = this;
+			
+			temp.parent = this.parent;
+			this.parent= temp;
+			
+			if(this.right != null) {
+			this.right.parent = this;
+			}
+			return temp;
+		}
 	    
-	    BSTNode(K key, V value) { this(key,value,null,null); }
-	    
+	 // BSTNode(K key, V value) { this(key,value,null,null,null); }  
 	}//End of private inner class 
 	
 	
@@ -133,6 +177,10 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 			return lookup(node.right, key);
 		}
 		
+	}
+	
+	public BSTNode<K,V> lookup(K Key) throws KeyNotFoundException{
+		return lookup(root, Key);
 	}
 	
 	
@@ -270,7 +318,7 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
      */
 	@Override
 	public List<K> getLevelOrderTraversal() {
-		ArrayList<K> levelOrder = new ArrayList<>();
+		List<K> levelOrder = new ArrayList<>();
 		for(int i = 0; i < getHeight(); i++) {
 			levelOrder(root, i, levelOrder);
 		}
@@ -293,105 +341,585 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		if (key == null) {
 			throw new IllegalNullKeyException();
 		}		
-		root = insert(root,key,value);
+		root = insert(root,key,value,null);	
+		try {
+			repair(lookup(key));
+			while(root.parent != null) {
+				root = root.parent;
+				root.color = Color.BLACK;
+			}		
+		}catch(Exception e) {
+			e.printStackTrace();
+		}		
 	}
 	
-	private BSTNode<K,V> insert(BSTNode<K,V> node, K key, V value) throws DuplicateKeyException{
+	private BSTNode<K,V> insert(BSTNode<K,V> node, K key, V value, BSTNode<K,V> parent) throws DuplicateKeyException{
+		
 		if(node == null) {
-			return new BSTNode<K,V>(key, value, null, null);
+			numKeys++;
+			return new BSTNode<K,V>(key, value,Color.RED, null, null, parent);
 		}
 		if(node.key.compareTo(key) == 0) {
 			throw new DuplicateKeyException();
 		}
 		
 		if(key.compareTo(node.key) < 0) {
-			node.left = insert(node.left, key, value);
+			node.left = insert(node.left, key, value,node);
 		}else {
-			 node.right = insert(node.right, key, value);
+			
+			 node.right = insert(node.right, key, value,node);
+		}
+		return node;
+	}
+
+	
+	private void repair(BSTNode<K,V> node) throws IllegalNullKeyException, KeyNotFoundException{
+		if(node.parent == null) {
+			System.out.println("ROOT CASE" + node.key);
+			//Root case
+			node.color = Color.BLACK;
+			return;
+		}
+		BSTNode<K,V> sibling = this.getSibling(node.parent.key);
+		BSTNode<K,V> grandMa = node.parent.parent;
+		
+		if(node.parent.color == Color.BLACK ) {
+			System.out.println("NO Violations" + node.key);
+			//If parent is black no violation 
+			return;
+		}else if(sibling != null && sibling.color == Color.RED ) {
+			System.out.println("ReColoring");
+			node.parent.color = Color.BLACK;
+			sibling.color = Color.BLACK;
+			if(grandMa != root) {
+			grandMa.color = Color.RED;
+			if(grandMa.parent.color == Color.RED) {
+				System.out.println("Recursive repair");
+				repair(grandMa);
+			}
+			}
+			
+			
+		}else {
+			if(node == node.parent.right && node.parent == grandMa.left) {
+				System.out.println("A");
+				node.parent = node.parent.leftRotate();
+				grandMa.left = node.parent;
+				node = node.parent.left;
+				
+			}else if(node == node.parent.left && node.parent == grandMa.right) {
+				System.out.println("B");
+				node.parent = node.parent.rightRotate();
+				grandMa.right = node.parent;
+				node = node.parent.right;
+			}
+			
+			if(node == node.parent.right) {
+				System.out.println("C" + node.key);
+				 if(grandMa.parent != null && grandMa.parent.left == grandMa) {
+					 grandMa = grandMa.leftRotate();
+					 grandMa.parent.left = grandMa;
+				 }else {
+					 grandMa = grandMa.leftRotate();
+					 if(grandMa.parent != null) {
+					 grandMa.parent.right = grandMa;
+					 }else {
+						 node.color = Color.BLACK;
+					 }
+				 }
+			}else {		
+				if(grandMa.parent != null && grandMa.parent.left == grandMa) {
+					System.out.println("D");
+					grandMa = grandMa.rightRotate();
+					grandMa.parent.left = grandMa;
+				}else {
+					System.out.println("E" + node.key);
+					 grandMa = grandMa.rightRotate();
+					 if(grandMa.parent != null) {
+					 grandMa.parent.right = grandMa;
+					 }else {
+						 node.color = Color.BLACK;
+					 }
+				 }
+				node.parent.color = Color.BLACK;
+				grandMa.color = Color.RED;
+			}
+		
+	
+			
+			
+		}	
+	}
+	 /** 
+	    * If key is found, remove the key,value pair from the data structure and decrease num keys.
+	    * If key is not found, do not decrease the number of keys in the data structure.
+	    * If key is null, throw IllegalNullKeyException
+	    * If key is not found, throw KeyNotFoundException().
+	    * Removing the key does not look to repair Red Black Properties, they could be violated depending on 
+	    * the node removed. 
+	    */
+	@Override
+	public boolean remove(K key) throws IllegalNullKeyException, KeyNotFoundException {
+		if(key == null) {
+			throw new IllegalNullKeyException();
+		}
+			lookup(key);
+			root = remove(root, key);
+			numKeys--;
+			return true;		
+	}
+	
+	private BSTNode<K,V> remove(BSTNode<K,V> node, K key) {
+		if(node == null) {
+			return null;
+		}
+		if(key.compareTo(node.key) == 0 ) {
+			if(node.left == null && node.right == null) {
+				return null;
+			}
+			if(node.left == null) {
+				return node.right;
+			}
+			if(node.right == null) {
+				return node.left;
+			}
+			
+			K inOrderPred = inOrderPred(node.left);
+			node.key = inOrderPred;
+			node.left = remove(node.left,inOrderPred);
+		}
+		
+		if(key.compareTo(node.key) < 0) {
+			node.left = remove(node.left, key);
+		}else {
+			node.right = remove(node.right,key);
 		}
 		
 		return node;
 	}
-
-	@Override
-	public boolean remove(K key) throws IllegalNullKeyException, KeyNotFoundException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public V get(K key) throws IllegalNullKeyException, KeyNotFoundException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean contains(K key) throws IllegalNullKeyException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public int numKeys() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public void print() {
-		// TODO Auto-generated method stub
-
+	
+	private K inOrderPred(BSTNode<K,V> node) {
+		if(node.right == null) {
+			return node.key;
+		}else {
+			return inOrderPred(node.right);
+		}
 	}
 	
-	public void printTree() {
+    /**
+     *  Returns the value associated with the specified key
+     *
+     * Does not remove key or decrease number of keys
+     * If key is null, throw IllegalNullKeyException 
+     * If key is not found, throw KeyNotFoundException().
+     */
+	@Override
+	public V get(K key) throws IllegalNullKeyException, KeyNotFoundException {	
+			if(key == null) {
+				throw new IllegalNullKeyException();
+			}
+			BSTNode<K,V> node = lookup(root, key);
+			return node.value;
+	}
+	//Get parent of key 
+	private K getParent(K key) throws IllegalNullKeyException, KeyNotFoundException{
+		if(key == null) {
+			throw new IllegalNullKeyException();
+		}
+		BSTNode<K,V> node = lookup(root,key);
+		if(node == root) {// Root doesn't not have a parent Node
+			return null;
+		}
+		return(node.parent.key);
+		
+	}
+	//Get sibling of key 
+	private BSTNode<K,V> getSibling(K key) throws IllegalNullKeyException, KeyNotFoundException{
+		if(key == null) {
+			throw new IllegalNullKeyException();
+		}
+			BSTNode<K,V> node = lookup(root, key);
+			if(node == root) {//node is root has no siblings 
+				return null;
+			}
+			BSTNode<K,V> parentNode = node.parent;
+			K leftChildKey = getKeyOfLeftChildOf(parentNode.key);
+			K rightChildKey = getKeyOfRightChildOf(parentNode.key);
+			//Parent node only has one child node has no siblings 
+			if(leftChildKey == null |  rightChildKey == null) {
+				return null;
+			}else {
+				if(node.key.compareTo(leftChildKey) == 0) {
+					return lookup(root,rightChildKey);
+				}else {
+					return lookup(root,leftChildKey);
+				}
+			}	
+	}
+	
+	
+
+	
+    /** 
+     * Returns true if the key is in the data structure
+     * If key is null, throw IllegalNullKeyException 
+     * Returns false if key is not null and is not present 
+     */
+	@Override
+	public boolean contains(K key) throws IllegalNullKeyException {
+		if(key == null) {
+			throw new IllegalNullKeyException();
+		}
+		try {
+		lookup(root, key);
+		}catch(KeyNotFoundException e) {
+			return false;
+		}
+		return true;
+	}
+
+
+    /**
+     *  Returns the number of key,value pairs in the data structure
+     */
+	@Override
+	public int numKeys() {
+		return numKeys;
+	}
+    /**
+     * Print the tree. 
+     *
+     * For our testing purposes: all keys that we insert in the tree
+     * will have a string length of exactly 2 characters.
+     * example: numbers 10-99, or strings aa - zz, or AA to ZZ
+     *
+     * This makes it easier for you to not worry about spacing issues.
+     *
+     * You can display in any of a variety of ways, but we should see
+     * a tree that we can identify left and right children of each node
+     *
+     * For example: 
+     
+       |       |-------50
+       |-------40
+       |       |-------35
+       30
+       |-------20
+       |       |-------10
+       
+       Look from bottom to top. Inorder traversal of above tree (10,20,30,35,40,50)
+       
+       Or, you can display a tree of this kind.
+       
+           30
+           /\
+          /  \
+         20  40
+         /   /\
+        /   /  \
+       10  35  50 
+
+       Or, you can come up with your own orientation pattern, like this.
+
+       10                 
+               20
+                       30
+       35                
+               40
+       50                  
+
+       The connecting lines are not required if we can interpret your tree.
+
+     */
+	@Override
+	public void print() {
 		if(root == null) {
 			return;
 		}
-
-		for(int i = 0; i < getHeight(); i++ ) {	
-		printTree(root, i);
+		
+		print(root, 0, numKeys);
+	}	
+	public void print(BSTNode<K,V> node, int spaces, int count) {
+		if(node == null){
+		return;
 		}
+		spaces += count;
+		print(node.right, spaces, count);
+		for(int i = count; i < spaces; i ++) {
+			System.out.print(" ");
+		}
+			System.out.println(node.key);
+		
+		print(node.left, spaces, numKeys);
 	}
 	
-	private void printTree(BSTNode<K,V> node, int level) {
-		if(node == null) {
-			return;
-		}
-		if(level == 0) {
-			System.out.println(node.key);
-		}else {
-			printTree(node.left, level - 1);
-			printTree(node.right, level -1);
-		}
-				
-		 
+	private void REPAIR() {
+		
 	}
-
 	
 	public static void main(String[]args) {
-		BALST<Integer,Integer> bst = new BALST<>();
+		
+		//BALST<Integer,Integer> bst = new BALST<>();
 		try {
-		bst.insert(10, 1);
+		/*bst.insert(20, 1);
+		bst.insert(28, 1);
+		bst.insert(16, 1);
+		bst.insert(19, 4);
+		bst.insert(14,1);
+		bst.insert(24, 1);
+		bst.insert(30,1);
+		bst.insert(13,15);
 		bst.insert(15, 1);
-		bst.insert(7, 1);
-		bst.insert(8, 1);
-		bst.insert(6, 1);
-		bst.insert(14, 1);
-	
+		bst.printTree();
+		
+		//bst.printTree();
+		
+		System.out.println("Get Value: " + bst.get(8));
+		System.out.println("Contains 14: " + bst.contains(14));
+		System.out.println("Contains: 2000: " + bst.contains(2000));
+		System.out.println("Parent of 14 is 15. "  + bst.getParent(14));
+		System.out.println("Left Child of 7 is 6 " + bst.getKeyOfLeftChildOf(7));
+		System.out.println("Right Child of 15 is null. " + bst.getKeyOfRightChildOf(15));
+		System.out.println("The sibling of 7 is 15. " + bst.getSibling(7).key);
+		System.out.println("The sibling of 14 is null. " + bst.getSibling(14));
+		System.out.println("The sibling of 8 is 6. " + bst.getSibling(8).key);
+		System.out.println("The sibling of 6 is 8. " + bst.getSibling(6).key);
+		System.out.println("The parent of the root is null: " + bst.getParent(10));
+		System.out.println("The sibling of the root is null: " + bst.getSibling(10));
+		
+		/*
+		BALST<Integer,Integer> rightRotate  = new BALST<>();
+		rightRotate.insert(10, 1);
+		rightRotate.insert(7, 1);
+		rightRotate.insert(6, 1);
+		rightRotate.insert(8,1);
+		rightRotate.insert(15, 1);	
+
+		System.out.println("\nTest rotate methods!!!");
+		System.out.println("Before rotate:");
+		rightRotate.printTree();
+		System.out.println("Roots key: " + rightRotate.root.key);
+		System.out.println("Left child key: " + rightRotate.root.left.key);
+		System.out.println("Right child key: " + rightRotate.root.right.key + "\nAfter Right Rotate:");
+		rightRotate.root = rightRotate.root.rightRotate();
+		rightRotate.printTree();
+		System.out.println("Roots key: " + rightRotate.root.key);
+		System.out.println("Left child key: " + rightRotate.root.left.key);
+		System.out.println("Right child key: " + rightRotate.root.right.key);
+		System.out.println("Right childs right child key:" + rightRotate.root.right.right.key);
+		System.out.println("Right childs left child key: " + rightRotate.root.right.left.key +"\n");
+		
+		BALST<Integer,Integer> leftRotate  = new BALST<>();	
+		leftRotate.insert(20,1);
+		leftRotate.insert(25,1);
+		leftRotate.insert(24,1);
+		leftRotate.insert(27,1);
+		leftRotate.insert(16,1);
+		System.out.println("Number of keys: " + leftRotate.numKeys());
+		System.out.println("Before rotate:");
+		leftRotate.printTree();
+		System.out.println("Roots key: " + leftRotate.root.key);
+		System.out.println("Left child key: " + leftRotate.root.left.key);
+		System.out.println("Right child key: " + leftRotate.root.right.key + "\nAfter Left Rotate:");
+		leftRotate.root = leftRotate.root.leftRotate();
+		leftRotate.printTree();
+		System.out.println("Roots key: " + leftRotate.root.key);
+		System.out.println("Left child key: " + leftRotate.root.left.key);
+		System.out.println("Right child key: " + leftRotate.root.right.key);
+		System.out.println("Left childs left key " + leftRotate.root.left.left.key);
+		System.out.println("Left childs right key: " +  leftRotate.root.left.right.key);
+		*/
+		/*
+		System.out.println("\n");
+		BALST<Integer,Integer> leftRight = new BALST<>();
+		leftRight.insert(10, 1);
+		leftRight.insert(7, 1);
+		leftRight.insert(6, 1);
+		leftRight.insert(8,1);
+		leftRight.insert(15, 1);
+		System.out.println("Before Rotate");
+		leftRight.printTree();
+		System.out.println("After Left Rotate at Parent");
+		leftRight.root.left = leftRight.root.left.leftRotate();
+		leftRight.printTree();
+		System.out.println("After Right Rotate at GrandParent");
+		leftRight.root = leftRight.root.rightRotate();
+		leftRight.printTree();
+		*/
+		BALST<Integer,Integer> rightLeft = new BALST<>();
+		rightLeft.insert(20,1);
+		rightLeft.insert(25,1);
+		rightLeft.insert(24,1);
+		rightLeft.insert(27,1);
+		rightLeft.insert(28,1);
+		rightLeft.insert(26,1);
+		rightLeft.insert(16,1);
+		rightLeft.insert(17, 1);
+
+
+		rightLeft.print();
+		
+		
+		BALST<Integer,Integer> test = new BALST<>();
+		System.out.println("Recoloring test");
+		test.insert(56, 1);
+		test.insert(77, 1);
+		test.insert(45,11);
+		test.insert(12, 1);
+		test.print();
+		System.out.println("root " + test.lookup(56).color);
+		System.out.println("right " + test.lookup(77).color);
+		System.out.println("left " + test.lookup(45).color);
+		System.out.println("left left " + test.lookup(12).color);
+		
+		System.out.println();
+		System.out.println("GRANDMA IS ROOT!!!");
+		BALST<Integer,Integer> test2 = new BALST<>();
+		System.out.println("Node is parent right and parent is grandmas right");
+		test2.insert(56, 1);
+		//test.insert(77, 1);
+		//test.insert(45,11);
+		test2.insert(60, 1);
+		test2.insert(70,1);
+		test2.print();
+		System.out.println();
+		System.out.println("Node is parents right, parents in grandmas left");
+		BALST<Integer,Integer> test3 = new BALST<>();
+		test3.insert(56, 1);
+		test3.insert(40, 1);
+		test3.insert(45,1);
+		test3.print();
+		System.out.println();
+		BALST<Integer,Integer> test4 = new BALST<>();
+		System.out.println("Node is parents left and parent is grandmas left");
+		test4.insert(56, 1);
+		test4.insert(46, 1);
+		test4.insert(26,1);
+		test4.print();
+		System.out.println();
+		BALST<Integer,Integer> test5 = new BALST<>();
+		System.out.println("Node is parents left and parent is grandmas right");
+		test5.insert(56, 1);
+		test5.insert(66, 1);
+		test5.insert(60,1);
+		test5.print();
+		System.out.println();
+		System.out.println("GRANDMA IS NOT ROOT");
+		BALST<Integer,Integer> test6 = new BALST<>();	
+		System.out.println("");
+		test6.insert(50, 1);
+		test6.insert(60, 1);
+		test6.insert(20,1);
+		test6.insert(70, 1);
+		test6.insert(65,1);
+		test6.print();
+		System.out.println();
+
+		System.out.println();
+		
+		BALST<Integer,Integer> test7 = new BALST<>();	
+		System.out.println("");
+		test7.insert(1, 1);
+		test7.insert(2, 1);
+		test7.insert(3,1);
+		test7.insert(4,1);
+		test7.print();
+		System.out.println(" " + test7.root.color + test7.root.left.color  +test7.root.right.color);
+		System.out.println();
+		
+		test7.print();
+		System.out.println();
+
 		}catch(IllegalNullKeyException e){
-			
+			e.printStackTrace();
 			
 		}catch(DuplicateKeyException e) {
+			e.printStackTrace();
 			
+		}catch(KeyNotFoundException e) {
+			e.printStackTrace();
 		}
-		bst.printTree();
-		List<Integer> test = bst.getLevelOrderTraversal();
-		System.out.println();
-		for(int i = 0; i < test.size(); i++) {
-			System.out.print(test.get(i) + " ");
-		}
+
+		
 	}
 	
 
 	
 }
+
+/*
+private void repair(BSTNode<K,V> node) throws IllegalNullKeyException, KeyNotFoundException{
+	if(node.parent == null) {
+		System.out.println("ROOT CASE" + node.key);
+		//Root case
+		node.color = Color.BLACK;
+		return;
+	}
+	BSTNode<K,V> sibling = this.getSibling(node.parent.key);
+	BSTNode<K,V> grandMa = node.parent.parent;
+	
+	if(node.parent.color == Color.BLACK ) {
+		System.out.println("NO Violations" + node.key + node.color);
+		//If parent is black no violation 
+		return;
+	}else if(sibling != null && sibling.color == Color.RED ) {
+		System.out.println("ReColoring");
+		node.parent.color = Color.BLACK;
+		sibling.color = Color.BLACK;
+		if(grandMa != root) {
+		grandMa.color = Color.RED;
+		if(grandMa.parent.color == Color.RED) {
+			System.out.println("Recursive repair");
+			repair(grandMa);
+		}
+		}
+		
+		
+	}else {
+		if(node == node.parent.right && node.parent == grandMa.left) {
+			System.out.println("A");
+			node.parent = node.parent.leftRotate();
+			grandMa.left = node.parent;
+			node = node.parent.left;
+			
+		}else if(node == node.parent.left && node.parent == grandMa.right) {
+			System.out.println("B");
+			node.parent = node.parent.rightRotate();
+			grandMa.right = node.parent;
+			node = node.parent.right;
+		}
+		
+		if(node == node.parent.right) {
+			System.out.println("C" + node.key);
+			 if(grandMa.parent != null && grandMa.parent.left == grandMa) {
+				 grandMa = grandMa.leftRotate();
+				 grandMa.parent.left = grandMa;
+			 }else {
+				 grandMa = grandMa.leftRotate();
+				 if(grandMa.parent != null) {
+				 grandMa.parent.right = grandMa;
+				 }
+			 }
+		}else {		
+			if(grandMa.parent != null && grandMa.parent.left == grandMa) {
+				System.out.println("D");
+				grandMa = grandMa.rightRotate();
+				grandMa.parent.left = grandMa;
+			}else {
+				System.out.println("E" + node.key);
+				 grandMa = grandMa.rightRotate();
+				 if(grandMa.parent != null) {
+				 grandMa.parent.right = grandMa;
+				 }
+		
+			}
+			node.parent.color = Color.BLACK;
+			if(grandMa.parent != null){
+			grandMa.color = Color.RED;
+			}
+		}
+		//node.parent.color = Color.BLACK;
+		//grandMa.color = Color.RED;
+	}	
+}
+*/
