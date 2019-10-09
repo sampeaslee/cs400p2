@@ -1,102 +1,101 @@
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-/**
- * 
- * Class to implement a BalanceSearchTree. Can be of type AVL or Red-Black.
- * Note which tree you implement here and as a comment when you submit.
+/*
+ * Name: Sam Peaslee
+ * Email: speaslee@wisc.edu
+ * project: p2 Balanced Search Tree - BALST.java
+ * Lecture: 002
+ * Description: This class implements a Red Black Tree with the BALSTADT interface. 
+ * Each node of the tree stores a key, node, color, reference to a left, right and parent node.
+ * Inserting nodes will maintain a balanced tree, once an item is removed the tree made not 
+ * be balanced anymore.  Remove method does removes key and restructure tree, but does not
+ * repair Red Black properties to maintain a balanced tree
  * 
  * @param <K> is the generic type of key
  * @param <V> is the generic type of value
  */
-public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
+public class BALST<K extends Comparable<K>, V>  implements BALSTADT<K, V> {
 	
 	enum Color {
+		//Enum to keep track of the color of a node. 
 		RED, BLACK;
 	}
-	//Public inner class storing node of the tree 
-	private class BSTNode<K,V> {
-	    
-		K key;
-	    V value;
-	    BSTNode<K,V> left;
-	    BSTNode<K,V> right;
-	    BSTNode<K,V> parent;
-	    Color color;
-
-	    /**
-	     * @param key
-	     * @param value
-	     * @param leftChild
-	     * @param rightChild
-	     */
-	  BSTNode(K key, V value, Color color,BSTNode<K,V>  leftChild, BSTNode<K,V> rightChild, BSTNode<K,V> parent) {
-	        this.key = key;
-	        this.value = value;
-	        this.color = color;
-	        this.left = leftChild;
-	        this.right = rightChild;
-	        this.parent = parent;
+	//Inner class for nodes of tree
+	class BSTNode<K,V> {
 	
-	    }
-	  
-	  
+		    //Fields of a BSTNode
+			K key;
+		    V value;
+		    BSTNode<K,V> left;
+		    BSTNode<K,V> right;
+		    BSTNode<K,V> parent;
+		    Color color;
+		    
+		    /*
+		     * Constructor to create a new BSTNode
+		     */
+		    BSTNode(K key, V value, Color color,BSTNode<K,V>  leftChild, BSTNode<K,V> rightChild, BSTNode<K,V> parent) {
+		        this.key = key;
+		        this.value = value;
+		        this.color = color;
+		        this.left = leftChild;
+		        this.right = rightChild;
+		        this.parent = parent;
+		    }
+			/**
+			 * Left rotate around a BSTNode
+			 * @param node- rotated around
+			 * @return reference to updated node 
+			 */
+			 BSTNode<K,V> leftRotate() throws KeyNotFoundException{
+				BSTNode<K,V> temp = this.right;
+				this.right = temp.left;
+				temp.left = this;
+				//Structure of the node changes so need to update the parent references 
+				temp.parent = this.parent;
+				this.parent = temp;
+				if(this.right != null) {
+				this.right.parent = this;
+				}
+				return temp;
+			}	
+			/**
+			 * Right rotate around a BSTNode
+			 * @param node- rotated around
+			 * @return reference to updated node 
+			 */	
+			  BSTNode<K,V> rightRotate() throws KeyNotFoundException{
+				BSTNode<K,V> temp = this.left;
+				this.left = temp.right;
+				temp.right = this;
+				//Structure of the node changes so need to update the parent references 
+				temp.parent = this.parent;
+				this.parent= temp;	
+				if(this.right != null) {
+				this.right.parent = this;
+				}
+				return temp;
+			} 
+			  
+			 K getParent() {
+				 return this.parent.key;
+			 }
 
-		/**
-		 * Left rotate around a BSTNode
-		 * @param node- rotated around
-		 * @return reference to updated node 
-		 */
-	  //LOOOOK AT THIS SHIT
-		private BSTNode<K,V> leftRotate() throws KeyNotFoundException{
-			BSTNode<K,V> temp = this.right;
-			this.right = temp.left;
-			temp.left = this;
-			
-			temp.parent = this.parent;
-			this.parent = temp;
-			if(this.right != null) {
-			this.right.parent = this;
-			}
-			
-			
-		
-			return temp;
-		}	
-		/**
-		 * Right rotate around a BSTNode
-		 * @param node- rotated around
-		 * @return reference to updated node 
-		 */	
-		private  BSTNode<K,V> rightRotate() throws KeyNotFoundException{
-			BSTNode<K,V> temp = this.left;
-			this.left = temp.right;
-			temp.right = this;
-			
-			temp.parent = this.parent;
-			this.parent= temp;
-			
-			if(this.right != null) {
-			this.right.parent = this;
-			}
-			return temp;
-		}
-	    
-	 // BSTNode(K key, V value) { this(key,value,null,null,null); }  
-	}//End of private inner class 
+		}//End of inner class
 	
+	//Private Field of BALST class
+	private BSTNode<K, V> root;//Reference to root of tree
+	private int numKeys;//Number of keys in tree
 	
-
-	private BSTNode<K, V> root;
-
-	private int numKeys;
-
+	/*
+	 * Constructor to create a new empty BALST
+	 */
 	public BALST() {
 	}
-
-	
-
+	/**
+	 * If tree is empty returns null, otherwise returns the key stored at the root 
+	 * @return root key
+	 */
 	@Override
 	public K getKeyAtRoot() {
 		if(root == null ) {
@@ -104,6 +103,7 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		}
 		return root.key;
 	}
+	
     /**
      * Tries to find a node with a key that matches the specified key.
      * If a matching node is found, it returns the returns the key that is in the left child.
@@ -115,19 +115,21 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
      * @throws IllegalNullKeyException if key argument is null
      * @throws KeyNotFoundException if key is not found in this BST
      */
+	
 	@Override
 	public K getKeyOfLeftChildOf(K key) throws IllegalNullKeyException, KeyNotFoundException {
 		if(key == null) {
 			throw new  IllegalArgumentException();
 		}
-		BSTNode<K,V> LeftChild = lookup(root, key).left;//Left child of node with key, if key is found, otherwise throws key not found Exception
+		//Left child of node with key, if key is found, otherwise throws key not found Exception
+		BSTNode<K,V> LeftChild = lookup(root, key).left;
 		if(LeftChild  == null) {//If left child is null returns null
 			return null;
 		}else {
 			return LeftChild.key;//returns key of left child 
 		}
 	}
-    
+  
     /**
      * Tries to find a node with a key that matches the specified key.
      * If a matching node is found, it returns the returns the key that is in the right child.
@@ -154,7 +156,7 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 	}
 	
 	/**
-	 * Helper method for getKeyOfRightChildOf and getKeyOfLeftChildOf methods 
+	 * Helper method 
 	 * Recursively looks through the tree to see if the key is present. If key not present throws KeyNotFoundExcepton 
 	 * If key is present returns the node that stores the key 
 	 * @param node - node to see if key is present in
@@ -165,22 +167,25 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 	
 	private BSTNode<K,V> lookup(BSTNode<K,V> node, K key) throws KeyNotFoundException{
 		if(node == null) {
+			//Key not found throw Exception 
 			throw new KeyNotFoundException();
 		}
 		if(key.compareTo(node.key) == 0) {
+			//If key is found return node that stores that key 
 			return node;
 		}
-		
+		//If key is less than the key at the current node search left 
 		if(key.compareTo(node.key) < 0) {
 			return lookup(node.left, key);
 			
-		}else {
+		}else {//Otherwise search right 
 			return lookup(node.right, key);
 		}
 		
 	}
 	
-	public BSTNode<K,V> lookup(K Key) throws KeyNotFoundException{
+	private BSTNode<K,V> lookup(K Key) throws KeyNotFoundException{
+		//Starts at the root then recursively looks through tree to see if key is present
 		return lookup(root, Key);
 	}
 	
@@ -206,10 +211,10 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 	
 	@Override
 	public int getHeight() {
-		if(root == null) {
+		if(root == null) {//If tree is empty return 0
 			return 0;
 		}
-		return height(root);
+		return height(root);//Returns height of tree
 	}
 	/**
 	 * Helper method for getHeight that recursively goes through a tree adding max heights of its subtrees to calculate total height of tree 
@@ -233,8 +238,6 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
         	maxHeight = heightRight;
         }
 		return 1 + maxHeight;//returns maxHeight plus 1, to include the node in its height  
-		
-		
 	}
 	
 	/**
@@ -245,12 +248,19 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
     * 
     * @return List of Keys in-order
     */	
+	
 	@Override
 	public List<K> getInOrderTraversal() {
 		ArrayList <K> inOrderList  =  new ArrayList<>();
 		inOrder(root, inOrderList);
 		return inOrderList;
 	}
+	/**
+	 * Helper function to recursively go through a tree and add the keys to list 
+	 * Stores left,root, then right
+	 * @param node
+	 * @param list 
+	 */
 	private  void inOrder(BSTNode<K,V> node, ArrayList <K> list){
 		if(node == null) {
 			return;
@@ -273,7 +283,12 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		preOrder(root, preOrderList);
 		return preOrderList;
 	}
-	
+	/**
+	 * Helper function to recursively go through a tree and the keys to a list
+	 * Stores root, left, then right
+	 * @param node
+	 * @param list
+	 */
 	private void preOrder(BSTNode<K,V> node, ArrayList <K> list) {
 		if(node == null) {
 			return;
@@ -296,12 +311,16 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		postOrder(root, postOrderList);
 		return postOrderList;
 	}
-	
+	/**
+	 * Helper function to recursively go through a tree and add the keys to a list
+	 * Stores left, right, then root
+	 * @param node
+	 * @param list
+	 */
 	private void postOrder(BSTNode<K,V> node, ArrayList<K> list) {
 		if(node == null) {
 			return;
-		} 
-		 
+		} 	 
 		 postOrder(node.left,list);
 		 postOrder(node.right, list);
 		 list.add(node.key);
@@ -325,7 +344,12 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		}
 		return levelOrder;
 	}
-	
+	/**
+	 * Helper function to recursively go through a tree and add the keys to a list
+	 * Stores keys at the root, then next level....
+	 * @param node
+	 * @param list
+	 */
 	private void levelOrder(BSTNode<K,V> node, int level, List<K> list) {
 		if(node == null) {
 			return;
@@ -336,125 +360,188 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		levelOrder(node.left, level - 1, list);
 		levelOrder(node.right, level - 1, list);	
 	}
-
+	
+    /** 
+     * Add the key,value pair to the data structure and increase the number of keys.
+     * If key is null, throw IllegalNullKeyException;
+     * If key is already in data structure, throw DuplicateKeyException(); 
+     * Do not increase the num of keys in the structure, if key,value pair is not added.
+     * @param Key - key to be stored in a new BSTNode
+     * @param Value - value associated with key 
+     */
 	@Override
 	public void insert(K key, V value) throws IllegalNullKeyException, DuplicateKeyException {
 		if (key == null) {
 			//If key is null throw Exception
 			throw new IllegalNullKeyException();
 		}		
-		root = insert(root,key,value,null);	
+		root = insert(root,key,value,null);	//Call to recursive insert method
 		try {
-			repair(lookup(key));
+			repair(lookup(key));//Repair Red Black Properties to keep balanced tree
+			//root of tree could potential be changed 
+			//Need to find node with null parent and set as new root 
 			while(root.parent != null) {
 				root = root.parent;
 				root.color = Color.BLACK;
 			}		
-		}catch(Exception e) {
+		}catch(KeyNotFoundException e) {
+			//If key was not properly inserted lookup() method will throw an exception 
 			e.printStackTrace();
 		}		
 	}
-	
+	/**
+	 * Helper method to go through the tree and add the key if it is not already present 
+	 * @param node- current node
+	 * @param key- key to be added
+	 * @param value- value associated with key 
+	 * @param parent- parent node of current key 
+	 * @return new BSTNode with key, if key can be inserted 
+	 * @throws DuplicateKeyException
+	 */
 	private BSTNode<K,V> insert(BSTNode<K,V> node, K key, V value, BSTNode<K,V> parent) throws DuplicateKeyException{
 		
 		if(node == null) {
+			//add key and increment number of keys by one
 			numKeys++;
 			return new BSTNode<K,V>(key, value,Color.RED, null, null, parent);
 		}
 		if(node.key.compareTo(key) == 0) {
+			//If key is already in tree throw exception 
 			throw new DuplicateKeyException();
 		}
 		
 		if(key.compareTo(node.key) < 0) {
+			//If key is less than key at current node, go left 
 			node.left = insert(node.left, key, value,node);
-		}else {
-			
+		}else {//Otherwise go right
 			 node.right = insert(node.right, key, value,node);
 		}
 		return node;
 	}
-
+	/**
+	 * Restores Red Black Properties to keep tree balanced
+	 * @param node - node just added to tree 
+	 * @throws IllegalNullKeyException
+	 * @throws KeyNotFoundException
+	 */
 	
 	private void repair(BSTNode<K,V> node) throws IllegalNullKeyException, KeyNotFoundException{
 		if(node.parent == null) {
-			System.out.println("ROOT CASE" + node.key);
-			//Root case
+			//Empty Tree add key to root and color black
 			node.color = Color.BLACK;
 			return;
 		}
-		BSTNode<K,V> sibling = this.getSibling(node.parent.key);
-		BSTNode<K,V> grandMa = node.parent.parent;
+		BSTNode<K,V> sibling = this.getSibling(node.parent.key);//Reference to node's parent's sibling 
+		BSTNode<K,V> grandMa = node.parent.parent;// Reference to node's GrandMa
 		
 		if(node.parent.color == Color.BLACK ) {
-			System.out.println("NO Violations" + node.key);
-			//If parent is black no violation 
+			//If parent is black no Red Black Tree violation 
 			return;
 		}else if(sibling != null && sibling.color == Color.RED ) {
-			System.out.println("ReColoring");
+			//If parents sibling is red need to do a re-coloring 
 			node.parent.color = Color.BLACK;
 			sibling.color = Color.BLACK;
-			if(grandMa != root) {
+			if(grandMa != root) {//If grandMa is not the color red
 			grandMa.color = Color.RED;
+			
 			if(grandMa.parent.color == Color.RED) {
-				System.out.println("Recursive repair");
+				//IF grandMa's parent is red there is a violation of
+				//Red Black rules need to recursively repair the tree
 				repair(grandMa);
 			}
+			
 			}
-			
-			
-		}else {
+		}else {//Parent is Red, violates Red Black Rules 
 			if(node == node.parent.right && node.parent == grandMa.left) {
-				System.out.println("A");
+				//node is parents right child and parent is grandMa's left child 
+				//Left rotate at parent
 				node.parent = node.parent.leftRotate();
 				grandMa.left = node.parent;
 				node = node.parent.left;
 				
 			}else if(node == node.parent.left && node.parent == grandMa.right) {
-				System.out.println("B");
+				//node is parent left child and parent is grandMa's right child
+				//Right rotate at parent
 				node.parent = node.parent.rightRotate();
 				grandMa.right = node.parent;
 				node = node.parent.right;
 			}
 			
 			if(node == node.parent.right) {
-				System.out.println("C" + node.key);
+				//node is parents right child 
 				 if(grandMa.parent != null && grandMa.parent.left == grandMa) {
+					 //grandMa is not root and is left child of its parent 
+					 //Left rotate at grandMa updates its parents left child reference 
 					 grandMa = grandMa.leftRotate();
 					 grandMa.parent.left = grandMa;
 				 }else {
+					 //Left rotate at grandMa 
 					 grandMa = grandMa.leftRotate();
-					 if(grandMa.parent != null) {
+					if(grandMa.parent != null) {
+					//If grandMa is not root updates is parents right child reference 
 					 grandMa.parent.right = grandMa;
 					 }
 				 }
+				 //Re-color nodes after rotation 
 				 grandMa.left.color = Color.RED;
 				 node.parent.color = Color.BLACK;
-
-					
-
-			}else {	
+			}else {
+				//node is parents left child 
 				if(grandMa.parent != null && grandMa.parent.left == grandMa) {
-					System.out.println("D");
+					//grandMa is not root and is left child of its parent
+					//Right rotate at grandma and updates is parents right child 
 					grandMa = grandMa.rightRotate();
 					grandMa.parent.left = grandMa;
 				}else {
-					System.out.println("E" + node.key);
+					//Right rotate at grandMa
 					 grandMa = grandMa.rightRotate();
 					 if(grandMa.parent != null) {
+					 //grandMa is not rot updates its parents right child reference 
 					 grandMa.parent.right = grandMa;
-					 }else {
-						 //node.color = Color.BLACK;
 					 }
 							 
 				}
+				//Re-color nodes after rotation 
 				node.parent.color = Color.BLACK;
 				grandMa.right.color = Color.RED;
 		
-			}
-			
-			
+			}			
 		}	
 	}
+	
+	/**
+	 * Gets the sibling BSTNode of a key  
+	 * @param key- key to find sibling off
+	 * @return- null if only child or the BSTNode of the sibling of the key 
+	 * @throws IllegalNullKeyException
+	 * @throws KeyNotFoundException
+	 */
+	private BSTNode<K, V> getSibling(K key) throws IllegalNullKeyException, KeyNotFoundException {
+		if (key == null) {
+			throw new IllegalNullKeyException();
+		}
+		BSTNode<K, V> node = lookup(root, key);//Reference to node with key
+		if (node == root) {// node is root has no siblings
+			return null;
+		}
+		BSTNode<K, V> parentNode = node.parent;//Reference to nodes parent
+		K leftChildKey = getKeyOfLeftChildOf(parentNode.key); //key of parents left child 
+		K rightChildKey = getKeyOfRightChildOf(parentNode.key);//key of parents right child 
+		// Parent node only has one child node has no siblings
+		if (leftChildKey == null | rightChildKey == null) {
+			return null;
+		} else {
+			if (node.key.compareTo(leftChildKey) == 0) {
+				//If key of node is left child of parent then return right child 
+				return lookup(root, rightChildKey);
+			} else {
+				//Otherwise key of node is right child of parent return left child;
+				return lookup(root, leftChildKey);
+			}
+		}
+	}
+	
+	
 	 /** 
 	    * If key is found, remove the key,value pair from the data structure and decrease num keys.
 	    * If key is not found, do not decrease the number of keys in the data structure.
@@ -462,51 +549,64 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 	    * If key is not found, throw KeyNotFoundException().
 	    * Removing the key does not look to repair Red Black Properties, they could be violated depending on 
 	    * the node removed. 
+	    * @param key- key to remove
+	    * @return true if key is properly removed  
 	    */
 	@Override
 	public boolean remove(K key) throws IllegalNullKeyException, KeyNotFoundException {
 		if(key == null) {
 			throw new IllegalNullKeyException();
 		}
-			lookup(key);
-			root = remove(root, key);
-			numKeys--;
-			return true;		
+			lookup(key);//IF key not present KeyNorFoundException thrown
+			root = remove(root, key);//Call to recursive remove method
+			numKeys--;//Key removed decrease number of keys 
+			return true;
 	}
 	
 	private BSTNode<K,V> remove(BSTNode<K,V> node, K key) {
 		if(node == null) {
 			return null;
 		}
-		if(key.compareTo(node.key) == 0 ) {
+		if(key.compareTo(node.key) == 0 ) {//Key found in tree
 			if(node.left == null && node.right == null) {
+				//If no children return null 
 				return null;
 			}
 			if(node.left == null) {
+				//If no left child return right child
 				return node.right;
 			}
 			if(node.right == null) {
+				//if no right child return left child
 				return node.left;
 			}
-			
-			K inOrderPred = inOrderPred(node.left);
-			node.key = inOrderPred;
-			node.left = remove(node.left,inOrderPred);
+			//If node that has two children 
+			K inOrderPred = inOrderPred(node.left);// Find in order predecessor 
+			node.key = inOrderPred;//Set node to the node of the its predecessor 
+			node.left = remove(node.left,inOrderPred);// Remove predecessor and set subtree to left child of the node
 		}
 		
 		if(key.compareTo(node.key) < 0) {
+			//If keys is less then key stored in node, go left 
 			node.left = remove(node.left, key);
 		}else {
+			//Otherwise go right 
 			node.right = remove(node.right,key);
 		}
 		
-		return node;
+		return node;// Return reference to updated node 
 	}
-	
+
+	/**
+	 * Method looks in tree to find the largest value 
+	 * @param node
+	 * @return largest key in tree 
+	 */
 	private K inOrderPred(BSTNode<K,V> node) {
 		if(node.right == null) {
 			return node.key;
 		}else {
+			//Go all the way right until you cannot anymore
 			return inOrderPred(node.right);
 		}
 	}
@@ -517,58 +617,26 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
      * Does not remove key or decrease number of keys
      * If key is null, throw IllegalNullKeyException 
      * If key is not found, throw KeyNotFoundException().
+     * Uses helper method lookup 
+     * @param key - key to look for 
+     * @return value associated with key 
      */
 	@Override
 	public V get(K key) throws IllegalNullKeyException, KeyNotFoundException {	
 			if(key == null) {
 				throw new IllegalNullKeyException();
 			}
-			BSTNode<K,V> node = lookup(root, key);
+			BSTNode<K,V> node = lookup(root, key);//Call recursive lookup method
+			//If no exception thrown key is found return value associated with key
 			return node.value;
 	}
-	//Get parent of key 
-	private K getParent(K key) throws IllegalNullKeyException, KeyNotFoundException{
-		if(key == null) {
-			throw new IllegalNullKeyException();
-		}
-		BSTNode<K,V> node = lookup(root,key);
-		if(node == root) {// Root doesn't not have a parent Node
-			return null;
-		}
-		return(node.parent.key);
-		
-	}
-	//Get sibling of key 
-	private BSTNode<K,V> getSibling(K key) throws IllegalNullKeyException, KeyNotFoundException{
-		if(key == null) {
-			throw new IllegalNullKeyException();
-		}
-			BSTNode<K,V> node = lookup(root, key);
-			if(node == root) {//node is root has no siblings 
-				return null;
-			}
-			BSTNode<K,V> parentNode = node.parent;
-			K leftChildKey = getKeyOfLeftChildOf(parentNode.key);
-			K rightChildKey = getKeyOfRightChildOf(parentNode.key);
-			//Parent node only has one child node has no siblings 
-			if(leftChildKey == null |  rightChildKey == null) {
-				return null;
-			}else {
-				if(node.key.compareTo(leftChildKey) == 0) {
-					return lookup(root,rightChildKey);
-				}else {
-					return lookup(root,leftChildKey);
-				}
-			}	
-	}
-	
-	
 
-	
     /** 
      * Returns true if the key is in the data structure
      * If key is null, throw IllegalNullKeyException 
      * Returns false if key is not null and is not present 
+     * @param key - key to look for 
+     * @return true if key is found, false if not found 
      */
 	@Override
 	public boolean contains(K key) throws IllegalNullKeyException {
@@ -576,8 +644,9 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 			throw new IllegalNullKeyException();
 		}
 		try {
-		lookup(root, key);
+		lookup(root, key);//Call to recursive lookup method
 		}catch(KeyNotFoundException e) {
+			//If key not found lookup method will throw a KeyNotFoundException 
 			return false;
 		}
 		return true;
@@ -592,278 +661,30 @@ public class BALST<K extends Comparable<K>, V> implements BALSTADT<K, V> {
 		return numKeys;
 	}
     /**
-     * Print the tree. 
-     *
-     * For our testing purposes: all keys that we insert in the tree
-     * will have a string length of exactly 2 characters.
-     * example: numbers 10-99, or strings aa - zz, or AA to ZZ
-     *
-     * This makes it easier for you to not worry about spacing issues.
-     *
-     * You can display in any of a variety of ways, but we should see
-     * a tree that we can identify left and right children of each node
-     *
-     * For example: 
-     
-       |       |-------50
-       |-------40
-       |       |-------35
-       30
-       |-------20
-       |       |-------10
-       
-       Look from bottom to top. Inorder traversal of above tree (10,20,30,35,40,50)
-       
-       Or, you can display a tree of this kind.
-       
-           30
-           /\
-          /  \
-         20  40
-         /   /\
-        /   /  \
-       10  35  50 
-
-       Or, you can come up with your own orientation pattern, like this.
-
-       10                 
-               20
-                       30
-       35                
-               40
-       50                  
-
-       The connecting lines are not required if we can interpret your tree.
-
+     * Prints the tree. Prints from right to left horizontally
      */
 	@Override
 	public void print() {
 		if(root == null) {
 			return;
 		}
-		
-		print(root, 0, numKeys);
-	}	
-	public void print(BSTNode<K,V> node, int spaces, int count) {
+		print(root, 0, numKeys);//Call to recursive print method
+	}
+	/**
+	 * Helper method to recursively go through a tree and print the keys 
+	 */
+	private void print(BSTNode<K,V> node, int spaces, int count) {
 		if(node == null){
 		return;
 		}
 		spaces += count;
-		print(node.right, spaces, count);
+		print(node.right, spaces, count);//Print right key first 
 		for(int i = count; i < spaces; i ++) {
 			System.out.print(" ");
 		}
 			System.out.println(node.key);
 		
-		print(node.left, spaces, numKeys);
-	}
-
-	public static void main(String[]args) {
-		
-		BALST<Integer,Integer> bst = new BALST<>();
-		try {
-		bst.insert(8, 1);
-		bst.insert(9, 1);
-		bst.insert(7, 1);
-		bst.insert(6,1);
-		bst.insert(5,1);
-		bst.insert(4,1);
-		bst.insert(3,1);
-		bst.insert(2,1);
-		//System.out.println("root " + bst.lookup(1).parent.key);
-		/*
-		System.out.println("1" + bst.lookup(1).color);
-		System.out.println("2" + bst.lookup(2).color);
-		System.out.println("3 " + bst.lookup(3).color);
-		System.out.println("4" + bst.lookup(4).color);
-		System.out.println("5" + bst.lookup(5).color);
-		*/
-		System.out.println("6" + bst.lookup(6).color);
-		System.out.println("4" + bst.lookup(4).color);
-		System.out.println("5" + bst.lookup(5).color);
-		
-		//bst.insert(7,1);
-		//bst.insert(8,15);
-		//bst.insert(, 1);
-		bst.print();
-
-		
-		
-
-		BALST<Integer,Integer> rightLeft = new BALST<>();
-		rightLeft.insert(20,1);
-		rightLeft.insert(25,1);
-		rightLeft.insert(24,1);
-		rightLeft.insert(27,1);
-		rightLeft.insert(28,1);
-		rightLeft.insert(26,1);
-		rightLeft.insert(16,1);
-		rightLeft.insert(17, 1);
-
-
-		rightLeft.print();
-		
-		
-		BALST<Integer,Integer> test = new BALST<>();
-		System.out.println("Recoloring test");
-		test.insert(56, 1);
-		test.insert(77, 1);
-		test.insert(45,11);
-		test.insert(12, 1);
-		test.print();
-		//System.out.println("root " + test.lookup(56).parent.color);
-		System.out.println("right " + test.lookup(77).color);
-		System.out.println("left " + test.lookup(45).color);
-		System.out.println("left left " + test.lookup(12).color);
-		
-		System.out.println();
-		System.out.println("GRANDMA IS ROOT!!!");
-		BALST<Integer,Integer> test2 = new BALST<>();
-		System.out.println("Node is parent right and parent is grandmas right");
-		test2.insert(56, 1);
-		//test.insert(77, 1);
-		test2.insert(45,11);
-		test2.insert(60, 1);
-		test2.insert(70,1);
-		test2.print();
-		System.out.println();
-		System.out.println("Node is parents right, parents in grandmas left");
-		BALST<Integer,Integer> test3 = new BALST<>();
-		test3.insert(56, 1);
-		test3.insert(40, 1);
-		test3.insert(45,1);
-		test3.print();
-		System.out.println();
-		BALST<Integer,Integer> test4 = new BALST<>();
-		System.out.println("Node is parents left and parent is grandmas left");
-		test4.insert(56, 1);
-		test4.insert(46, 1);
-		test4.insert(26,1);
-		test4.print();
-		System.out.println();
-		BALST<Integer,Integer> test5 = new BALST<>();
-		System.out.println("Node is parents left and parent is grandmas right");
-		test5.insert(56, 1);
-		test5.insert(66, 1);
-		test5.insert(60,1);
-		test5.print();
-		System.out.println();
-		System.out.println("GRANDMA IS NOT ROOT");
-		BALST<Integer,Integer> test6 = new BALST<>();	
-		System.out.println("");
-		test6.insert(50, 1);
-		test6.insert(60, 1);
-		test6.insert(20,1);
-		test6.insert(70, 1);
-		test6.insert(65,1);
-		test6.print();
-		System.out.println();
-
-		System.out.println();
-		
-		BALST<Integer,Integer> test7 = new BALST<>();	
-		System.out.println("");
-		test7.insert(1, 1);
-		test7.insert(2, 1);
-		test7.insert(3,1);
-		test7.insert(4,1);
-		test7.print();
-		System.out.println(" " + test7.root.color + test7.root.left.color  +test7.root.right.color);
-		System.out.println();
-		
-		test7.print();
-		System.out.println();
-
-		}catch(IllegalNullKeyException e){
-			e.printStackTrace();
-			
-		}catch(DuplicateKeyException e) {
-			e.printStackTrace();
-			
-		}catch(KeyNotFoundException e) {
-			e.printStackTrace();
-		}
-
-		
-	}
-	
-
-	
-}
-
-/*
-private void repair(BSTNode<K,V> node) throws IllegalNullKeyException, KeyNotFoundException{
-	if(node.parent == null) {
-		System.out.println("ROOT CASE" + node.key);
-		//Root case
-		node.color = Color.BLACK;
-		return;
-	}
-	BSTNode<K,V> sibling = this.getSibling(node.parent.key);
-	BSTNode<K,V> grandMa = node.parent.parent;
-	
-	if(node.parent.color == Color.BLACK ) {
-		System.out.println("NO Violations" + node.key + node.color);
-		//If parent is black no violation 
-		return;
-	}else if(sibling != null && sibling.color == Color.RED ) {
-		System.out.println("ReColoring");
-		node.parent.color = Color.BLACK;
-		sibling.color = Color.BLACK;
-		if(grandMa != root) {
-		grandMa.color = Color.RED;
-		if(grandMa.parent.color == Color.RED) {
-			System.out.println("Recursive repair");
-			repair(grandMa);
-		}
-		}
-		
-		
-	}else {
-		if(node == node.parent.right && node.parent == grandMa.left) {
-			System.out.println("A");
-			node.parent = node.parent.leftRotate();
-			grandMa.left = node.parent;
-			node = node.parent.left;
-			
-		}else if(node == node.parent.left && node.parent == grandMa.right) {
-			System.out.println("B");
-			node.parent = node.parent.rightRotate();
-			grandMa.right = node.parent;
-			node = node.parent.right;
-		}
-		
-		if(node == node.parent.right) {
-			System.out.println("C" + node.key);
-			 if(grandMa.parent != null && grandMa.parent.left == grandMa) {
-				 grandMa = grandMa.leftRotate();
-				 grandMa.parent.left = grandMa;
-			 }else {
-				 grandMa = grandMa.leftRotate();
-				 if(grandMa.parent != null) {
-				 grandMa.parent.right = grandMa;
-				 }
-			 }
-		}else {		
-			if(grandMa.parent != null && grandMa.parent.left == grandMa) {
-				System.out.println("D");
-				grandMa = grandMa.rightRotate();
-				grandMa.parent.left = grandMa;
-			}else {
-				System.out.println("E" + node.key);
-				 grandMa = grandMa.rightRotate();
-				 if(grandMa.parent != null) {
-				 grandMa.parent.right = grandMa;
-				 }
-		
-			}
-			node.parent.color = Color.BLACK;
-			if(grandMa.parent != null){
-			grandMa.color = Color.RED;
-			}
-		}
-		//node.parent.color = Color.BLACK;
-		//grandMa.color = Color.RED;
+		print(node.left, spaces, numKeys);//Then print left keys 
 	}	
 }
-*/
+
