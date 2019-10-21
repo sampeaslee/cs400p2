@@ -8,7 +8,7 @@ import java.util.List;
  * @param <K> A Comparable type to be used as a key to an associated value.  
  * @param <V> A value associated with the given key.
  */
-public interface BALSTADT<K extends Comparable<K>,V> {
+public interface BALSTADT<K extends Comparable<K>,V>{
     
     /**
      * Returns the key that is in the root node of this BST.

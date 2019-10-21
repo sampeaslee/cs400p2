@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 
 // @SuppressWarnings("rawtypes")
-public class BALSTTest {
+public class BALSTTestTWO {
 
     BALST<String, String> balst1;
     BALST<Integer, String> balst2;
@@ -315,6 +315,8 @@ public class BALSTTest {
             balst2.insert(3, "");
             balst2.insert(2, "");
             balst2.insert(1, "");
+            balst2.print();
+
             ArrayList<Integer> test = new ArrayList<>();
             // If inserted correctly the trees level or traverse should look like test ArrayList
             test.add(6);
@@ -681,14 +683,16 @@ public class BALSTTest {
             balst2.insert(11, "");
             balst2.insert(45, "");
             balst2.insert(2, "");
-
+             
             balst2.remove(77);
-            if (balst2.contains(77) | !balst2.contains(56) || !balst2.contains(88)
-                || !balst2.contains(99) || !balst2.contains(33) || !balst2.contains(12)
-                || !balst2.contains(12) || !balst2.contains(11) || !balst2.contains(45)
-                || !balst2.contains(2)) {
+            balst2.print();
+            if (!balst2.contains(56) || !balst2.contains(88) || !balst2.contains(99)
+                || !balst2.contains(33) || !balst2.contains(12) || !balst2.contains(12)
+                || !balst2.contains(11) || !balst2.contains(45) || !balst2.contains(2)) {
                 fail();
             }
+            
+
         } catch (Exception e) {
             e.printStackTrace();
             fail();
@@ -719,34 +723,26 @@ public class BALSTTest {
             fail();
         }
     }
-       
+    
+    
     /**
      * Insert 1,2,3,4,5,6,7,8,9 in sorted order and prints tree 
      */
     @Test
     void testBALST017_print_structure() {
         try {
-            balst2.insert(66, "");
-            balst2.insert(58, "");
-            balst2.insert(63, "");
-            balst2.insert(9, "");
+            balst2.insert(1, "");
+            balst2.insert(2, "");
             balst2.insert(3, "");
-            balst2.insert(33, "");
-            balst2.insert(70, "");
-            balst2.insert(21, "");
-            balst2.insert(14, "");
-            balst2.insert(81, "");
-            balst2.insert(31, "");
-            balst2.insert(62, "");
-            balst2.insert(99, "");
+            balst2.insert(4, "");
+            balst2.insert(5, "");
+            balst2.insert(6, "");
+            balst2.insert(7, "");
             balst2.insert(8, "");
-            balst2.insert(89, "");
+            balst2.insert(9, "");
             balst2.print();
             System.out.println("Inserted in sorted order 1,2,3,4,5,6,7,8,9");
             System.out.println("Thats a good looking tree right there!!!");
-            
-            
-            
         } catch (Exception e) {
             e.printStackTrace();
             fail();
@@ -765,6 +761,7 @@ public class BALSTTest {
             balst2.insert(20, "");
             balst2.insert(70, "");
             balst2.insert(65, "");
+
             ArrayList<Integer> test = new ArrayList<>();
             test.add(20);
             test.add(50);
@@ -777,6 +774,7 @@ public class BALSTTest {
                     fail();
                 }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
             fail("Unexpected exception Red Black Tree  004: " + e.getMessage());
@@ -794,6 +792,7 @@ public class BALSTTest {
             balst2.insert(20, "");
             balst2.insert(70, "");
             balst2.insert(65, "");
+
             ArrayList<Integer> test = new ArrayList<>();
             test.add(50);
             test.add(20);
@@ -875,4 +874,3 @@ public class BALSTTest {
     }
 
 }
-

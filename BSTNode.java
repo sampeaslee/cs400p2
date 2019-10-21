@@ -1,43 +1,66 @@
-// Students may use and edit this class as they choose
-// Students may add or remove or edit fields, methods, constructors for this class
-// Students may inherit from an use this class in any way internally in other classes.
-// Students are not required to use this class. 
-// BUT, IF YOUR CODE USES THIS CLASS, BE SURE TO SUBMIT THIS CLASS
-//
-// RECOMMENDED: do not use public or private visibility modifiers
-// and make this an inner class in your tree implementation.
-//
-// package level access means that all classes in the package can access directly.
-// and accessing the node fields from classes other than your balanced search 
-// is bad design as it creates many more chances for bugs to be introduced and not
-// caught.
-//
-// Classes that use this type:  <TODO, list which if any classes use this type>
-class BSTNode<K,V> {
-    
-    K key;
-    V value;
-    BSTNode<K,V> left;
-    BSTNode<K,V> right;
-    int balanceFactor;
-    int height;
-    
 
-    /**
-     * @param key
-     * @param value
-     * @param leftChild
-     * @param rightChild
-     */
-    BSTNode(K key, V value, BSTNode<K,V>  leftChild, BSTNode<K,V> rightChild) {
-        this.key = key;
-        this.value = value;
-        this.left = leftChild;
-        this.right = rightChild;
-        this.height = 0;
-        this.balanceFactor = 0;
-    }
-    
-    BSTNode(K key, V value) { this(key,value,null,null); }
-    
-}
+
+class BSTNode<K,V> {
+	enum Color {
+		//Enum to keep track of the color of a node. 
+		RED, BLACK;
+	}
+	    //Private fields of a BSTNode
+		K key;
+	    V value;
+	    BSTNode<K,V> left;
+	    BSTNode<K,V> right;
+	    BSTNode<K,V> parent;
+	    Color color;
+	    
+	    BSTNode(){
+	    	
+	    }
+
+	    /*
+	     * Constructor to create a new BSTNode
+	     */
+	    BSTNode(K key, V value, Color color,BSTNode<K,V>  leftChild, BSTNode<K,V> rightChild, BSTNode<K,V> parent) {
+	        this.key = key;
+	        this.value = value;
+	        this.color = color;
+	        this.left = leftChild;
+	        this.right = rightChild;
+	        this.parent = parent;
+	    }
+		/**
+		 * Left rotate around a BSTNode
+		 * @param node- rotated around
+		 * @return reference to updated node 
+		 */
+		 BSTNode<K,V> leftRotate() throws KeyNotFoundException{
+			BSTNode<K,V> temp = this.right;
+			this.right = temp.left;
+			temp.left = this;
+			//Structure of the node changes so need to update the parent references 
+			temp.parent = this.parent;
+			this.parent = temp;
+			if(this.right != null) {
+			this.right.parent = this;
+			}
+			return temp;
+		}	
+		/**
+		 * Right rotate around a BSTNode
+		 * @param node- rotated around
+		 * @return reference to updated node 
+		 */	
+		  BSTNode<K,V> rightRotate() throws KeyNotFoundException{
+			BSTNode<K,V> temp = this.left;
+			this.left = temp.right;
+			temp.right = this;
+			//Structure of the node changes so need to update the parent references 
+			temp.parent = this.parent;
+			this.parent= temp;	
+			if(this.right != null) {
+			this.right.parent = this;
+			}
+			return temp;
+		} 
+
+	}
